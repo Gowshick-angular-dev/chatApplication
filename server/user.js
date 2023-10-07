@@ -1,16 +1,24 @@
 const DBpool = require('./db_config');
+const app = express();
 const router = require('express').Router();
 const authentication = require('./auth')
+const multer = require('multer')
 
+
+app.use('/', router);
 
   router.get('/user', (req, res) => {    
+    console.log('sdfufifgfyerwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww')
     DBpool.query('SELECT * FROM user', (err, results) => {
         if (err) {
-          console.error('Error executing query:', err);
-          res.json({ message: err });
+          console.log('Error executing query:', err);
+          res.send({ message: err });
+          // res.json({ message: err });
           return;
         } else {
-            res.json(results);
+            console.log('Error executing query:', err);
+            res.send(results);
+            // res.json(results);
         }
       
         console.log('Query results:', results);
@@ -29,22 +37,22 @@ const authentication = require('./auth')
       
         console.log('Query results:', results);
       });
-  });
+  });  
 
-  router.post('/save_user' , (req, res) => {
-    console.log("wrhiwuriweurhioewrh", req.body);
-    DBpool.query(`INSERT INTO user (user_name,password,status) values('${req.body?.user_name}','${req.body?.password}','1')`, (err, results) => {
-        if (err) {
-          console.error('Error executing query:', err);
-          res.send({ message: err });
-          return;
-        } else {
-          res.send(results);
-        }
-      
-        console.log('Query results:', results);
-      });
-  });
+  // const upload = multer({
+  //   dest: 'uploads/',
+  //   limits: {
+  //     fileSize: 5242880
+  //   },
+  //   fileFilter(req, file, cb) {
+  //     if (!file.originalname.match(/\.(jpg|jpeg|pdf|xlsx|png)$/)) {
+  //       return cb(new Error('Please upload a Image'))
+  //     }
+  //     cb(undefined, true)
+  //   }
+  // })
+
+  
   
 
 module.exports = router;

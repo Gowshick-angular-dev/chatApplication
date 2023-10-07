@@ -1,43 +1,77 @@
 const express = require('express');
-const router = require('express').Router()
-// const http = require('http');
-const cors = require('cors')
-// const socketIo = require('socket.io');
+const router = require('express').Router();
+const DBpool = require('./db_config');
+const cors = require('cors');
 const app = express();
 const http = require('http').Server(app);
-// const server = http.createServer(app);
-// const io = socketIo(server);
+const path = require("path");
+const fs = require("fs");
+const multer = require('multer')
+const jwt = require("./jwt");
+var serveStatic = require('serve-static');
+
+const verifyToken = (req, res, next) => {
+    const token = req.headers.authorization;
+
+    if (!token) {
+        return res.status(403).send({
+            message : "A token is required for authentication"
+        });
+    }
+    console.log("vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv", token);
+
+    jwt.accessTokenDecode(function (e) {
+        if (e.status) {
+            req.user = e.data?.id;
+            console.log('weeeeeeeeeweeeeeeeeeeeeeeeeeeeeeeeeee', e.data)
+            return next();
+        } else {
+            return res.status(e.code).send({
+                message : e.message
+            });
+        }
+    }, token);
+
+};
+
 const socketIO = require('socket.io')(http, {
   cors: {
-      origin: "http://localhost:3001",
-      // origin: "http://192.168.1.18:3001"
+    origin: "http://localhost:4000",
   }
 });
 let users = [];
 
 app.use(cors())
+app.use(express.json())
+app.use('/uploads', express.static('uploads'));
+
+const upload = multer({
+  dest: 'uploads/',
+  limits: {
+    fileSize: 5242880
+  },
+  fileFilter(req, file, cb) {
+    if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
+      return cb(new Error('Please upload a Image'))
+    }
+    cb(undefined, true)
+  }
+})
 
 socketIO.on('connection', (socket) => {
-  console.log(`⚡: ${socket.id} user just connected!`);
+  console.log(`A user just connected!`);
   socket.on('message', (data) => {
     socketIO.emit('messageResponse', data);
   });
 
-  //Listens when a new user joins the server
   socket.on('newUser', (data) => {
-    //Adds the new user to the list of users
     users.push(data);
-    // console.log(users);
-    //Sends the list of users to the client
     socketIO.emit('newUserResponse', users);
   });
 
   socket.on('disconnect', () => {
-    console.log('🔥: A user disconnected');
-    //Updates the list of users when a user disconnects from the server
+    console.log('A user disconnected');
     users = users.filter((user) => user.socketID !== socket.id);
-    // console.log(users);
-    //Sends the list of users to the client
     socketIO.emit('newUserResponse', users);
     socket.disconnect();
   });
@@ -46,8 +80,170 @@ socketIO.on('connection', (socket) => {
 
 router.get('/get',(req,res)=> {
   res.json({messgae:"hello"})
-  console.log("shgdsghd")
 })
+
+router.get('/user', verifyToken, (req, res) => {
+  DBpool.query('SELECT * FROM user', (err, results) => {
+      if (err) {
+        console.log('Error executing query:', err);
+        res.send({
+          "status": 200,
+          "message": err,
+          "data": []
+        });
+        return;
+      } else {
+          res.send({
+            "status": 200,
+            "message": "success!",
+            "data": results
+          });
+      }
+    });
+});
+
+router.post('/save_user' , upload.fields([
+  { name: "image", maxCount: 1 },
+]), (req, res) => {
+  console.log("wrhiwuriweurhioewrh", req.body);  
+
+  let profile_image = "";
+
+        if (req.files.image) {
+          const extension = req.files.image[0]["mimetype"].split('/')[1]
+          profile_image = req.files.image[0]["filename"] + '.' + extension
+        }
+  
+  DBpool.query(`INSERT INTO user (user_name,email,password,image,status) values('${req.body?.name}','${req.body?.email}','${req.body?.password}','${profile_image}','1')`, (err, results) => {
+      if (err) {
+        console.error('Error executing query:', err);
+        res.send({ message: err });
+        return;
+      } else {
+
+        if (req.files.image) {
+          const currentPath = path.join(process.cwd(), "uploads", req.files.image[0]["filename"]);
+          const destinationPath = path.join(process.cwd(), "uploads/users/profile_image/" + `${results.insertId}`, profile_image);
+          const baseUrl = process.cwd() + '/uploads/users/profile_image/' + `${results.insertId}`
+          fs.mkdirSync(baseUrl, { recursive: true })
+          fs.rename(currentPath, destinationPath, function (err) {
+            if (err) {
+              throw err
+            } else {
+              console.log("Successfully Profile image Uploaded!")
+            }
+          });
+        }
+        res.send({
+          "status": 200,
+          "message": "success!"          
+        });
+      }
+    
+      console.log('Query results:', results.insertId);
+    });
+});
+
+router.post('/login', async (req, res) => {
+  try {
+    // const data = await DBpool.query(`SELECT * FROM test.user WHERE email='${req.body.email}'`).then((ejrhwie) => console.log('gggggggggggggggggg', ejrhwie)).catch((err) => console.log("errrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr", err));
+    let data;
+    DBpool.query(`SELECT * FROM user WHERE email='${req.body.email}'`, (err, results) => {
+      if (err) {
+        console.log('Error executing query:', err);
+        res.send({ message: err });
+        // res.json({ message: err });
+        return;
+      } else {
+        if (results.length == 0) {
+          res.status(200).send({
+            status:404,
+            message: "Email not found.",
+          });
+        } else {
+          // const match = await bcrypt.compare(req.body.password, data.password);
+          if (req.body.password?.toString() === results[0].password?.toString()) {
+            let id = results[0].id;
+            let name = results[0].user_name;
+            let email = results[0].email;
+            let image = results[0].image;
+            const token = jwt.accessTokenEncode(
+              {id, name, email, image},
+              'the-super-strong-secrect',
+              {
+                expiresIn: "24h",
+              }
+            );
+            res.status(200).send({
+              status: 200,
+              message: "Login Successfully!",
+              data: {
+                "user_id": id,
+                "email": email,
+                "image": image,
+                "token": token
+              }
+            });
+          } else {
+            res.status(200).send({
+              status:403,
+              message: "Incorrect password",
+            });
+          }
+        }
+      }
+    
+      console.log('Query results:', results);
+    });
+    
+  } catch (error) {
+    res.status(500).send({
+      message: error.message,
+    });
+  }
+});
+
+router.post('/send_message', verifyToken, (req, res) => {
+  
+  DBpool.query(`INSERT INTO messages (messages,created_by,user_to,status) values('${req.body?.messages}','${req.user?.id}','${req.body?.user_to}','1')`, (err, results) => {
+      if (err) {
+        console.error('Error executing query:', err);
+        res.send({
+          "status": 403,
+          "message": err
+        });
+        return;
+      } else {
+        res.send({
+          "status": 200,
+          "message": "success!"          
+        });
+      }
+    
+      console.log('Query results:', results.insertId);
+    });
+});
+
+router.get('/messages', verifyToken, (req, res) => {
+  DBpool.query('SELECT * FROM messages', (err, results) => {
+      if (err) {
+        console.log('Error executing query:', err);
+        res.send({
+          "status": 403,
+          "message": err,
+          "data": []
+        });
+        return;
+      } else {
+          console.log('Error executing query:', err);
+          res.send({
+            "status": 200,
+            "message": "Success",
+            "data": results
+          });
+      }
+    });
+});
 
 app.use('/', router)
 

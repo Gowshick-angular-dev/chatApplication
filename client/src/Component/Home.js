@@ -1,24 +1,68 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import {loginUsers} from './_requests';
+import { toast } from 'react-toastify';
 
-
-const Home = ({socket}) => {
+const Home = () => {
     const navigate = useNavigate();
     const [userName, setUserName] = useState('');
     const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
   
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
       e.preventDefault();
-      localStorage.setItem('userName', userName);
+      setLoading(true);
+      let body = {
+        "email": userName,
+        "password": password
+      }
+      const respoinse = await loginUsers(body)
+      if(respoinse.status == 200) {
+        
+        localStorage.setItem('token', respoinse.data?.token);
+        localStorage.setItem('userData', JSON.stringify(respoinse.data));
+        // toast.success(respoinse.message, {
+        //   position: "bottom-center",
+        //   autoClose: 3000,
+        //   hideProgressBar: false,
+        //   closeOnClick: true,
+        //   pauseOnHover: false,
+        //   draggable: true,
+        //   progress: undefined,
+        //   theme: "light",
+        // });
+        setTimeout(() => {
+          setLoading(false);
+          navigate('/chat');
+        }, 2000)
+      } else {
+        setLoading(false);
+        toast.warn(respoinse.message, {
+          position: "bottom-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+        });
+      }
       //sends the username and socket ID to the Node.js server
-      socket.emit('newUser', { userName, socketID: socket.id });
-      navigate('/chat');
+      // socket.emit('newUser', { userName, socketID: socket.id });
+      // navigate('/chat');
     }
+    
   return (
-    <div className='d-flex justify-content-center align-items-center h-100vh'>
+    <div className='d-flex justify-content-center align-items-center h-100vh background_img'>
       <div className='card br-15 bs-10'>
         <form className="login_form card-body" onSubmit={handleSubmit}>
-          <h2 className="home__header text-center">Sign in to Open Chat</h2>
+          <div className='d-flex justify-content-center'>
+            <h2 className="home__header text-center">Sign in <span className='text_primary'>To</span> Chat</h2>
+            <div className='chat-logo' >
+              <img src='/to-chat.png' className='w-100' />
+            </div>
+          </div>
           <div className='form-group fv-row mb-3'>
             <label htmlFor="username">Username</label>
             <input
@@ -31,7 +75,7 @@ const Home = ({socket}) => {
               onChange={(e) => setUserName(e.target.value)}
             />
           </div>
-          <div className='form-group fv-row mb-3'>
+          <div className='form-group fv-row mb-2'>
             <label htmlFor="password">Password</label>
             <input
               type="password"
@@ -43,10 +87,24 @@ const Home = ({socket}) => {
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
-          <div className='w-100 text-center'>
-            <button type='submit' className="btn btn-primary">SIGN IN</button>
+          <div className='text-end mb-2'>
+            <Link to='/forget' className='fs-8' >forget password?</Link>
           </div>
-          <Link to='/signUp' className='' >signup</Link>
+          <div className='w-100 text-center'>
+            <button type='submit' className="btn btn_primary">              
+              {!loading && <span className='indicator-label'>SIGN IN</span>}
+              {loading && (
+                  <span className='indicator-progress' style={{ display: 'block' }}>
+                      Please Wait...{' '}
+                      <span className='spinner-border spinner-border-sm align-middle ms-2'></span>
+                  </span>
+              )}
+              </button>
+          </div>  
+          <div className='mt-2'>        
+            <span className='fs-8'>Don't have an account? </span>
+            <Link to='/signUp' className='fs-7' >signup</Link>
+          </div>
         </form>
       </div>
     </div>

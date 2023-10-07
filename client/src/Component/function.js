@@ -19,12 +19,12 @@ export default function checkPageStatus(message, user) {
       alert("This browser does not support system notifications!")
     } 
     else if(Notification.permission === "granted") {
-      sendNotification(message, user)
+      // sendNotification(message, user)
     }
     else if(Notification.permission !== "denied") {
        Notification.requestPermission((permission)=> {
           if (permission === "granted") {
-            sendNotification(message, user)
+            // sendNotification(message, user)
           }
        })
     }

@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import checkPageStatus from './function'
+import checkPageStatus from './function';
+import {sendMessage} from './_requests';
 
 const ChatFooter = ({ socket }) => {
   const [message, setMessage] = useState('');
-  const handleTyping = () => socket.emit("typing",`${localStorage.getItem("userName")} is typing`)
+  const user = JSON.parse(localStorage.getItem("userData"))
+  const handleTyping = () => socket.emit("typing",`${user.user_name} is typing`)
 
   // const handleSendMessage = (e) => {
   //   e.preventDefault();
@@ -20,15 +22,28 @@ const ChatFooter = ({ socket }) => {
 
   // };
 
+  const messageSend = async (data) => {
+    console.log("ejheugreurgeurg", data);
+    let user = JSON.parse(localStorage.getItem("userData"));
+    console.log("ejhihwerrhudfbjsdf", user);
+    let body = {
+      "messages": data,
+      "user_to": 0
+    }
+    const response = await sendMessage(body)
+    console.log("werhweirguwerguywer1", response);
+  }
+
     const handleSendMessage = (e) => {
         e.preventDefault()
-        if(message.trim() && localStorage.getItem("userName")) {
-        socket.emit("message", 
+        if(message.trim() && localStorage.getItem("userData")) {
+        socket.emit("message",
             {
             text: message, 
-            name: localStorage.getItem("userName"), 
-            id: `${socket.id}${Math.random()}`
+            name: user.user_name, 
+            id: user.user_id
             }) 
+        messageSend(message);
         checkPageStatus(message, localStorage.getItem("userName")) 
         }
         setMessage("")
@@ -37,15 +52,20 @@ const ChatFooter = ({ socket }) => {
 
   return     <div className="chat__footer">
   <form className="form" onSubmit={handleSendMessage}>
-    <input
+    {/* <input
       type="text"
       placeholder="Write message"
-      className="message"
+      className="form-control"
       value={message}
       onChange={(e) => setMessage(e.target.value)}
       onKeyDown={handleTyping}
-    />
-    <button className="sendBtn">SEND</button>
+    /> */}
+    <textarea className='form-control message_area' placeholder="Write message..." value={message} onChange={(e) => setMessage(e.target.value)} onKeyDown={handleTyping} style={{'resize': 'none'}} />
+    <button className="btn btn-icon">
+      <div className='send_btn' >
+        <img src='/to-chat.png' className='w-100' />
+      </div>
+    </button>
   </form>
 </div>;
 };
