@@ -34,15 +34,22 @@ const ChatBar = ({ socket }) => {
         </div>
       </div>
       <div>
-        <h4 className="chat__header">ACTIVE USERS</h4>
-        <div className="chat__users">
+        {/* <h4 className="chat__header">ACTIVE USERS</h4> */}
+        <div className="chat__users px-2">
           {users.map((user, i) => (
-            <p key={i}>{user.user_name}</p>
+            <div className='card br_5 bs_10 border-0 p-2 d-flex flex-row' key={i}>
+              <div className='prof_img_pre_chat border'>
+                <img src={`${process.env.REACT_APP_API_URL}/uploads/users/profile_image/${user.id}/${user.image}`} className='profile_image w-100'/>
+              </div>
+              <div>
+                <span className='mb-0 ps-2'>{user.user_name}</span>
+              </div>
+            </div>
           ))}
         </div>
       </div>
     </div>
-  );
+  );  
 };
 
 export default ChatBar;

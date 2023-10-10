@@ -81,7 +81,6 @@ socketIO.on('connection', (socket) => {
 router.get('/get',(req,res)=> {
   res.json({messgae:"hello"})
 })
-
 router.get('/user', verifyToken, (req, res) => {
   DBpool.query('SELECT * FROM user', (err, results) => {
       if (err) {
@@ -225,7 +224,7 @@ router.post('/send_message', verifyToken, (req, res) => {
 });
 
 router.get('/messages', verifyToken, (req, res) => {
-  DBpool.query('SELECT * FROM messages', (err, results) => {
+  DBpool.query('SELECT * FROM messages LEFT JOIN user ON messages.created_by = user.id', (err, results) => {
       if (err) {
         console.log('Error executing query:', err);
         res.send({

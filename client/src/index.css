@@ -197,6 +197,12 @@ body {
   width: 75px !important;
   overflow: hidden !important;
 }
+.prof_img_pre_chat {
+  border-radius: 50% !important;
+  height: 50px !important;
+  width: 50px !important;
+  overflow: hidden !important;
+}
 .profile_image {
   display: flex;
   justify-content: center;
@@ -264,4 +270,10 @@ a {
   width: 40px !important;
   display: flex;
   align-items: center;
+}
+.chat_time {
+  font-size: 10px !important;
+  color: gray;
+  display: flex;
+  justify-content: end;
 }

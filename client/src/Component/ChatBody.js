@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import moment from 'moment';
 
 const ChatBody = ({ messages }) => {
   const navigate = useNavigate();
@@ -34,19 +35,21 @@ const ChatBody = ({ messages }) => {
       </header>
 
       <div className="message__container" id='efkwgeruwegribkjebr473684368y'>
-        {messages.map((message) =>
+        {messages.map((message) => 
           parseInt(message.created_by) === parseInt(user) ? (
             <div className="message__chats" key={message.id}>
-              <p className="sender__name">You</p>
+              {/* <p className="sender__name">You</p> */}
               <div className="message__sender">
-                <p>{message.messages}</p>
+                <p className='mb-1'>{message.messages}</p>
+                <small className='chat_time'>{moment(message.created_at).format('hh:mm a')}</small>
               </div>
             </div>
           ) : (
             <div className="message__chats" key={message.id}>
-              {/* <p>{message.name}</p> */}
+              {/* <p>{message.user_name}</p> */}
               <div className="message__recipient">
-                <p>{message.messages}!</p>
+                <p className='mb-1'>{message.messages}</p>
+                <small className='chat_time'>{moment(message.created_at).format('hh:mm a')}</small>
               </div>
             </div>
           )
