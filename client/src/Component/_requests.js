@@ -25,8 +25,8 @@ export function sendMessage(data) {
     .then((response => response))
 }
 
-export function reciveMessages() {
-    return axios.get(GET_MESSAGES_URL, {headers: {
+export function reciveMessages(to) {
+    return axios.get(GET_MESSAGES_URL+'?user_to='+to, {headers: {
         'Authorization': `${localStorage.getItem('token')}`,
       }})
     .then((response => response))

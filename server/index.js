@@ -9,13 +9,16 @@ const fs = require("fs");
 const multer = require('multer')
 const jwt = require("./jwt");
 var serveStatic = require('serve-static');
+const url = require('url');
+const querystring = require('querystring');
 
 const verifyToken = (req, res, next) => {
     const token = req.headers.authorization;
 
     if (!token) {
-        return res.status(403).send({
-            message : "A token is required for authentication"
+        return res.send({
+            "message" : "A token is required for authentication",
+            "status": 403
         });
     }
     console.log("vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv", token);
@@ -26,8 +29,9 @@ const verifyToken = (req, res, next) => {
             console.log('weeeeeeeeeweeeeeeeeeeeeeeeeeeeeeeeeee', e.data)
             return next();
         } else {
-            return res.status(e.code).send({
-                message : e.message
+            return res.send({
+                "message" : e.message,
+                "status": e.code
             });
         }
     }, token);
@@ -224,7 +228,12 @@ router.post('/send_message', verifyToken, (req, res) => {
 });
 
 router.get('/messages', verifyToken, (req, res) => {
-  DBpool.query('SELECT * FROM messages LEFT JOIN user ON messages.created_by = user.id', (err, results) => {
+  const parsedUrl = url.parse(req.url);
+  console.log("ekguergwurg", parsedUrl);
+  const queryString = parsedUrl.query;
+  const queryParams = querystring.parse(queryString);
+  DBpool.query(`SELECT messages.id, messages.messages, messages.created_at, messages.created_by, messages.user_to, messages.status, messages.files, user.user_name, user.image FROM messages left join user on (user.id = messages.created_by) where messages.created_by = ${req.user?.id} OR messages.created_by = ${queryParams?.user_to} AND messages.user_to = ${queryParams?.user_to} OR messages.user_to = ${req.user?.id}`, (err, results) => {
+  // DBpool.query(`SELECT messages.id, messages.messages, messages.created_at, messages.created_by, messages.user_to, messages.status, messages.files, user.user_name, user.image FROM messages LEFT JOIN user ON messages.created_by = user.id where messages.user_to = ${queryParams?.user_to || req.user?.id}`, (err, results) => {
       if (err) {
         console.log('Error executing query:', err);
         res.send({
@@ -234,7 +243,6 @@ router.get('/messages', verifyToken, (req, res) => {
         });
         return;
       } else {
-          console.log('Error executing query:', err);
           res.send({
             "status": 200,
             "message": "Success",

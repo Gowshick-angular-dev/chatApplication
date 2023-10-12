@@ -16,12 +16,13 @@ const Home = () => {
         "email": userName,
         "password": password
       }
-      const respoinse = await loginUsers(body)
-      if(respoinse.status == 200) {
+      const response = await loginUsers(body)
+      console.log("erjwehrwoehruweihrwerh", response);
+      if(response.status == 200) {
         
-        localStorage.setItem('token', respoinse.data?.token);
-        localStorage.setItem('userData', JSON.stringify(respoinse.data));
-        // toast.success(respoinse.message, {
+        localStorage.setItem('token', response.data?.token);
+        localStorage.setItem('userData', JSON.stringify(response.data));
+        // toast.success(response.message, {
         //   position: "bottom-center",
         //   autoClose: 3000,
         //   hideProgressBar: false,
@@ -37,7 +38,7 @@ const Home = () => {
         }, 2000)
       } else {
         setLoading(false);
-        toast.warn(respoinse.message, {
+        toast.warn(response.message, {
           position: "bottom-center",
           autoClose: 5000,
           hideProgressBar: false,

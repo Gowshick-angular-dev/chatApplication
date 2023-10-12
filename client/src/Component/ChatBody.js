@@ -29,9 +29,9 @@ const ChatBody = ({ messages }) => {
     <>
       <header className="chat__mainHeader" id='kfjerjthkejrtkejrt'>
         <p>Hangout with Colleagues</p>
-        {/* <button className="leaveChat__btn" onClick={handleLeaveChat}>
+        <button className="leaveChat__btn" onClick={handleLeaveChat}>
           LEAVE CHAT
-        </button> */}
+        </button>
       </header>
 
       <div className="message__container" id='efkwgeruwegribkjebr473684368y'>

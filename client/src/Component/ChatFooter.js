@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import checkPageStatus from './function';
 import {sendMessage} from './_requests';
 
-const ChatFooter = ({ socket }) => {
+const ChatFooter = ({ socket, userId }) => {
   const [message, setMessage] = useState('');
   const user = JSON.parse(localStorage.getItem("userData"))
-  const handleTyping = () => socket.emit("typing",`${user.user_name} is typing`)
+  // const handleTyping = () => socket.emit("typing",`${user.user_name} is typing`)
 
   // const handleSendMessage = (e) => {
   //   e.preventDefault();
@@ -28,7 +28,7 @@ const ChatFooter = ({ socket }) => {
     console.log("ejhihwerrhudfbjsdf", user);
     let body = {
       "messages": data,
-      "user_to": 0
+      "user_to": userId
     }
     const response = await sendMessage(body)
     console.log("werhweirguwerguywer1", response);
@@ -60,7 +60,7 @@ const ChatFooter = ({ socket }) => {
       onChange={(e) => setMessage(e.target.value)}
       onKeyDown={handleTyping}
     /> */}
-    <textarea className='form-control message_area' placeholder="Write message..." value={message} onChange={(e) => setMessage(e.target.value)} onKeyDown={handleTyping} style={{'resize': 'none'}} />
+    <textarea className='form-control message_area' placeholder="Write message..." value={message} onChange={(e) => setMessage(e.target.value)} style={{'resize': 'none'}} />
     <button className="btn btn-icon">
       <div className='send_btn' >
         <img src='/to-chat.png' className='w-100' />
