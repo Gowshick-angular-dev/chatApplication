@@ -38,6 +38,8 @@ const verifyToken = (req, res, next) => {
 
 };
 
+app.set('view engine', 'ejs');
+
 const socketIO = require('socket.io')(http, {
   cors: {
     origin: "http://localhost:4000",
@@ -252,8 +254,33 @@ router.get('/messages', verifyToken, (req, res) => {
     });
 });
 
+app.get('/index', (req, res) => {
+  res.render('fil/index', { title: [
+    {
+      id: 0,
+      name: "Cobol",
+    },
+    {
+      id: 1,
+      name: "JavaScript",
+    },
+    {
+      id: 2,
+      name: "Basic",
+    },
+    {
+      id: 3,
+      name: "PHP",
+    },
+    {
+      id: 4,
+      name: "Java",
+    },
+  ] }); // Render the "index.ejs" template
+});
+
 app.use('/', router)
 
-http.listen(4000, () => {
+http.listen(9001, () => {
   console.log('Server is running on port 4000');
 });
